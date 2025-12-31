@@ -20,23 +20,26 @@ import com.google.android.material.textfield.TextInputEditText;
 
 public class CanvasActivity extends AppCompatActivity {
 
-    private ImageButton btnCircle, btnRect, btnSign;
+    private ImageButton btnCircle, btnRect, btnSign, btnUndo, btnRedo;
     private Slider valueSlider;
     private TextInputEditText etRadius;
     private CanvasController controller;
+    private CanvasController.DrawingCanvas canvas;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_canvas);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        controller = new CanvasController();
+        controller = new CanvasController(this);
+        canvas = new CanvasController.DrawingCanvas(this);
         findViews();
         registerEvents();
         initDefaultBehavior();
@@ -47,6 +50,8 @@ public class CanvasActivity extends AppCompatActivity {
         btnSign.setSelected(true); // Default selection
         enableSlider(false); // Radius slider for circle shape only
         valueSlider.setValue(CanvasController.DEF_RADIUS);
+        enableUndo(false);
+        enableRedo(false);
     }
 
     private void registerEvents() {
@@ -78,6 +83,10 @@ public class CanvasActivity extends AppCompatActivity {
             enableSlider(v.isSelected());
         });
 
+        btnUndo.setOnClickListener(v -> canvas.undo());
+
+        btnRedo.setOnClickListener( v -> canvas.redo());
+
         etRadius.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) { }
@@ -106,6 +115,18 @@ public class CanvasActivity extends AppCompatActivity {
         });
     }
 
+    public void enableUndo(boolean value) {
+        btnUndo.setEnabled(value);
+        if (value) btnUndo.setImageDrawable(getDrawable(R.drawable.undo));
+        else btnUndo.setImageDrawable(getDrawable(R.drawable.undo_disabled));
+    }
+
+    public void enableRedo(boolean value) {
+        btnRedo.setEnabled(value);
+        if (value) btnRedo.setImageDrawable(getDrawable(R.drawable.redo));
+        else btnRedo.setImageDrawable(getDrawable(R.drawable.redo_disabled));
+    }
+
     private void enableSlider(boolean value) {
 
         valueSlider.setEnabled(value);
@@ -117,13 +138,15 @@ public class CanvasActivity extends AppCompatActivity {
         btnCircle = findViewById(R.id.btnCircle);
         btnRect = findViewById(R.id.btnRect);
         btnSign = findViewById(R.id.btnSign);
+        btnUndo = findViewById(R.id.btnUndo);
+        btnRedo = findViewById(R.id.btnRedo);
         etRadius = findViewById(R.id.etRadius);
         valueSlider = findViewById(R.id.valueSlider);
         LinearLayout layoutCanvas = findViewById(R.id.layoutCanvas);
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         layoutCanvas.setLayoutParams(params);
-        layoutCanvas.addView(new CanvasController.DrawingCanvas(this));
+        layoutCanvas.addView(canvas);
     }
 
 }

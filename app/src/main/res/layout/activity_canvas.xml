@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -12,13 +13,30 @@
         android:layout_height="wrap_content"
         android:background="#CFCFCF"
         android:gravity="center"
-        android:paddingVertical="6dp"
+        android:paddingVertical="3dp"
+        android:paddingHorizontal="4dp"
         android:orientation="horizontal">
+        <ImageButton
+            android:id="@+id/btnUndo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/undo_disabled"
+            android:background="@android:color/transparent" />
+        <ImageButton
+            android:id="@+id/btnRedo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/redo_disabled"
+            android:background="@android:color/transparent" />
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent" />
         <ImageButton
             android:id="@+id/btnSign"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="10dp"
             android:src="@drawable/toggle_sign"
             android:background="@android:color/transparent"
             android:clickable="true"
@@ -27,7 +45,6 @@
             android:id="@+id/btnRect"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="10dp"
             android:src="@drawable/toggle_rectangle"
             android:background="@android:color/transparent"
             android:clickable="true"
@@ -36,7 +53,6 @@
             android:id="@+id/btnCircle"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="10dp"
             android:src="@drawable/toggle_circle"
             android:background="@android:color/transparent"
             android:clickable="true"

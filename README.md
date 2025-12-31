@@ -18,6 +18,7 @@ This project is designed to be lightweight, easy to understand, and suitable for
 - Circle drawing
 - Custom View with Canvas and Paint
 - Preserves and redraws previously drawn shapes
+- Undo / Redo support
 - Lightweight and easy to understand
 - MVC-based structure
 
@@ -64,7 +65,6 @@ This project is designed to be lightweight, easy to understand, and suitable for
 
 ## Planned Features
 
-- Undo / Redo support
 - Export drawing as Bitmap or image
 - Save and load signatures
 - Stroke customization (color, width)

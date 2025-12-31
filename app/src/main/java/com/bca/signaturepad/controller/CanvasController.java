@@ -14,18 +14,23 @@ import com.bca.signaturepad.interfaces.DrawingShape;
 import com.bca.signaturepad.model.CircleShape;
 import com.bca.signaturepad.model.PathShape;
 import com.bca.signaturepad.model.RectShape;
+import com.bca.signaturepad.ui.CanvasActivity;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CanvasController {
 
+    private static CanvasActivity view;
     private static int shape, radius;
     public final static int NONE = 0, RECT = 1, CIRCLE = 2, SIGNATURE = 3;
     public final static int DEF_RADIUS = 4;
     public final static int RADIUS_MULTIPLIER = 15;
 
-    public CanvasController() {
+    public CanvasController(CanvasActivity view) {
+
+        CanvasController.view = view;
         shape = SIGNATURE;
         radius = DEF_RADIUS;
     }
@@ -41,11 +46,11 @@ public class CanvasController {
     public static class DrawingCanvas extends View implements View.OnTouchListener {
 
         float x, y;
-        private final RectF rect = new RectF();
-        private final Path signPath = new Path();
+        private Path signPath;
         private Paint paint;
         private Paint signPaint;
-        private List<DrawingShape> drawnShapes;
+        private final ArrayDeque<DrawingShape> undoQueue = new ArrayDeque<>();
+        private final ArrayDeque<DrawingShape> redoQueue = new ArrayDeque<>();
 
         public DrawingCanvas(Context context) {
 
@@ -60,7 +65,6 @@ public class CanvasController {
             paint.setAntiAlias(true);
             signPaint = new Paint();
             signPaint.setAntiAlias(true);
-            drawnShapes = new ArrayList<>();
         }
 
         private void setSignatureStyle() {
@@ -76,29 +80,45 @@ public class CanvasController {
             paint.setStyle(Paint.Style.FILL);
         }
 
+        private void addShape(DrawingShape shape) {
+
+            undoQueue.push(shape);
+            redoQueue.clear();
+            view.enableUndo(true);
+            view.enableRedo(false);
+            invalidate();
+        }
+
+        public void undo() {
+
+            if (!undoQueue.isEmpty()) {
+                redoQueue.push(undoQueue.pop());
+                invalidate();
+                view.enableUndo(!undoQueue.isEmpty());
+                view.enableRedo(!redoQueue.isEmpty());
+            }
+        }
+
+        public void redo() {
+
+            if (!redoQueue.isEmpty()) {
+                undoQueue.push(redoQueue.pop());
+                invalidate();
+                view.enableRedo(!redoQueue.isEmpty());
+                view.enableUndo(!undoQueue.isEmpty());
+            }
+        }
+
         @Override
         protected void onDraw(@NonNull Canvas canvas) {
             super.onDraw(canvas);
 
-            if (shape == SIGNATURE) setSignatureStyle();
-            else setPaintStyle();
-
-            switch (shape) {
-                case RECT:
-                    drawnShapes.add(new RectShape(x, y, x + 100f, y + 100f, paint));
-                    break;
-                case CIRCLE:
-                    int actualRadius = radius * RADIUS_MULTIPLIER;
-                    drawnShapes.add(new CircleShape(x, y, actualRadius, paint));
-                    break;
-                case SIGNATURE:
-                    drawnShapes.add(new PathShape(signPath, signPaint));
-                    break;
-            }
-
-            for (DrawingShape c : drawnShapes) {
+            for (DrawingShape c : undoQueue) {
                 c.draw(canvas);
             }
+
+            if (shape == SIGNATURE && signPath != null)
+                canvas.drawPath(signPath, signPaint);
         }
 
         @Override
@@ -107,16 +127,34 @@ public class CanvasController {
             x = event.getX();
             y = event.getY();
 
-            if (shape == SIGNATURE) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
+            switch (event.getAction()) {
+
+                case MotionEvent.ACTION_DOWN:
+                    if (shape == SIGNATURE) {
+                        setSignatureStyle();
+                        signPath = new Path();
                         signPath.moveTo(x, y);
                         return true;
-                    case MotionEvent.ACTION_MOVE:
-                    case MotionEvent.ACTION_UP:
-                        signPath.lineTo(x, y);
-                        break;
-                }
+                    } else {
+                        setPaintStyle();
+                        x = event.getX();
+                        y = event.getY();
+                    }
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    signPath.lineTo(x, y);
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (shape == RECT)
+                        addShape(new RectShape(x, y, x + 100f, y + 100f, paint));
+                    else if (shape == CIRCLE)
+                        addShape(new CircleShape(x, y, radius * RADIUS_MULTIPLIER, paint));
+                    else if (shape == SIGNATURE) {
+                        addShape(new PathShape(signPath, signPaint));
+                        signPath = null;
+                    }
+
+                    break;
             }
 
             invalidate();
